@@ -1,0 +1,114 @@
+-- DAX measures for the E-Commerce Sales & Customer Analytics dashboard.
+-- Create a new measure in Power BI (Modeling > New measure) and paste one block at a time.
+-- Tip: create an empty table called "_Measures" (Home > Enter data) and store all measures there.
+--
+-- "Valid sale" = order status is not Cancelled or Returned (fact_orders[is_valid_sale] = 1).
+-- fact_orders has one row per order LINE, so orders are counted with DISTINCTCOUNT.
+
+
+-- ===== Core KPIs =====
+
+Total Revenue =
+CALCULATE ( SUM ( fact_orders[revenue] ), fact_orders[is_valid_sale] = 1 )
+
+Total Profit =
+CALCULATE ( SUM ( fact_orders[profit] ), fact_orders[is_valid_sale] = 1 )
+
+Profit Margin =
+DIVIDE ( [Total Profit], [Total Revenue] )
+
+Total Orders =
+CALCULATE ( DISTINCTCOUNT ( fact_orders[order_id] ), fact_orders[is_valid_sale] = 1 )
+
+Average Order Value =
+DIVIDE ( [Total Revenue], [Total Orders] )
+
+Total Customers =
+CALCULATE ( DISTINCTCOUNT ( fact_orders[customer_key] ), fact_orders[is_valid_sale] = 1 )
+
+Units Sold =
+CALCULATE ( SUM ( fact_orders[quantity] ), fact_orders[is_valid_sale] = 1 )
+
+Revenue per Customer =
+DIVIDE ( [Total Revenue], [Total Customers] )
+
+
+-- ===== Discounts =====
+
+Total Discount Given =
+CALCULATE ( SUM ( fact_orders[discount_amount] ), fact_orders[is_valid_sale] = 1 )
+
+Average Discount % =
+DIVIDE (
+    [Total Discount Given],
+    CALCULATE ( SUM ( fact_orders[gross_sales] ), fact_orders[is_valid_sale] = 1 )
+)
+
+
+-- ===== Time comparison (needs dim_date[date] marked as the date table) =====
+
+Revenue Last Month =
+CALCULATE ( [Total Revenue], DATEADD ( dim_date[date], -1, MONTH ) )
+
+Revenue Growth vs Last Month =
+DIVIDE ( [Total Revenue] - [Revenue Last Month], [Revenue Last Month] )
+
+
+-- ===== Share of total =====
+
+Category Revenue Share =
+DIVIDE (
+    [Total Revenue],
+    CALCULATE ( [Total Revenue], ALL ( dim_product[category] ) )
+)
+
+
+-- ===== Customers =====
+
+Repeat Customers =
+COUNTROWS (
+    FILTER (
+        VALUES ( fact_orders[customer_key] ),
+        CALCULATE (
+            DISTINCTCOUNT ( fact_orders[order_id] ),
+            fact_orders[is_valid_sale] = 1
+        ) >= 2
+    )
+)
+
+Repeat Customer Rate =
+DIVIDE ( [Repeat Customers], [Total Customers] )
+
+
+-- ===== Operations =====
+
+-- Delivery days are stored on every order line, so the measure first reduces to one row per order.
+Average Delivery Days =
+CALCULATE (
+    AVERAGEX (
+        SUMMARIZE ( fact_orders, fact_orders[order_id], fact_orders[delivery_days] ),
+        fact_orders[delivery_days]
+    ),
+    fact_orders[order_status] = "Delivered"
+)
+
+On-Time Delivery % =
+DIVIDE (
+    CALCULATE ( DISTINCTCOUNT ( fact_orders[order_id] ), fact_orders[delivery_status] = "On Time" ),
+    CALCULATE ( DISTINCTCOUNT ( fact_orders[order_id] ), fact_orders[delivery_status] IN { "On Time", "Late" } )
+)
+
+Cancellation Rate =
+DIVIDE (
+    CALCULATE ( DISTINCTCOUNT ( fact_orders[order_id] ), fact_orders[order_status] = "Cancelled" ),
+    DISTINCTCOUNT ( fact_orders[order_id] )
+)
+
+Return Rate =
+DIVIDE (
+    CALCULATE ( DISTINCTCOUNT ( fact_orders[order_id] ), fact_orders[order_status] = "Returned" ),
+    DISTINCTCOUNT ( fact_orders[order_id] )
+)
+
+Average Rating =
+AVERAGE ( fact_orders[rating] )

@@ -1,0 +1,29 @@
+table,issue,rows_affected
+customers,city spelling/capitalisation fixed,1669
+customers,state spelling/capitalisation fixed,405
+customers,segment capitalisation fixed,100
+customers,missing segment filled with most common value,100
+customers,missing email (left empty),302
+customers,duplicate customer records removed,200
+products,category names standardised,301
+products,duplicate products removed,15
+products,missing cost_price estimated from category ratio,20
+orders,duplicate orders removed,300
+orders,order_status standardised,5398
+orders,payment_method standardised,2456
+orders,"invalid order_date, orders removed",100
+orders,"delivery_date before order_date, set to empty",282
+orders,"delivered orders without delivery_date (kept, excluded from delivery stats)",732
+orders,missing shipping_state filled from shipping_city,499
+orders,orders with unknown customer removed,0
+order_items,duplicate order lines removed,326
+order_items,missing discount set to 0,815
+order_items,discount entered as percent (e.g. 15) converted to 0.15,223
+order_items,missing unit_price filled from products table,489
+order_items,"quantity zero or negative, lines removed",163
+order_items,lines without a valid order/product removed,165
+reviews,duplicate reviews removed,139
+reviews,"rating outside 1-5, reviews removed",466
+reviews,reviews without a matching order line removed,92
+orders,"orders left without any order line, removed",70
+customers,"signup_date after first order, set to first order date",60

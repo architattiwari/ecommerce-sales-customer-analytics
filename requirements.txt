@@ -1,0 +1,9 @@
+pandas
+numpy
+matplotlib
+seaborn
+openpyxl
+psycopg2-binary
+python-dotenv
+notebook
+ipykernel
